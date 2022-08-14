@@ -144,7 +144,7 @@ class DoctaAccessibilityService : AccessibilityService() {
             }
         } else {
             println("is not locked")
-            onDestroy()
+            removeWindow()
         }
     }
 

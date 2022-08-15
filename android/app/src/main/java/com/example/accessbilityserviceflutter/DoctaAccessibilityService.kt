@@ -23,6 +23,9 @@ class DoctaAccessibilityService : AccessibilityService() {
     private lateinit var lp : WindowManager.LayoutParams
     private var screenOnOffReceiver: BroadcastReceiver? = null
 
+    private var theX:Int = 0
+    private var theY:Int = 50
+
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate() {
         super.onCreate()
@@ -49,7 +52,9 @@ class DoctaAccessibilityService : AccessibilityService() {
         lp.flags = lp.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         lp.width = WindowManager.LayoutParams.WRAP_CONTENT
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT
-        lp.gravity = Gravity.CENTER
+        lp.x = theX
+        lp.y = theY
+        //lp.gravity = Gravity.CENTER
 
         val inflater = LayoutInflater.from(this)
         inflater.inflate(R.layout.floating_layout, mLayout)
@@ -76,6 +81,9 @@ class DoctaAccessibilityService : AccessibilityService() {
                     MotionEvent.ACTION_MOVE -> {
                         lp.x = (x + event.rawX - px).toInt()
                         lp.y = (y + event.rawY - py).toInt()
+
+                        theX = lp.x
+                        theY = lp.y
 
                         windowManager.updateViewLayout(mLayout, lp)
 
@@ -126,7 +134,8 @@ class DoctaAccessibilityService : AccessibilityService() {
                     MotionEvent.ACTION_MOVE -> {
                         lp.x = (x + event.rawX - px).toInt()
                         lp.y = (y + event.rawY - py).toInt()
-
+                        theX = lp.x
+                        theY = lp.y
                         windowManager.updateViewLayout(mLayout, lp)
 
                     }

@@ -2,4 +2,7 @@
 <resources>
     <string name="button">CLCIK</string>
     <string name="information_content">Flutter Information Content</string>
+    <string name="todo">TODO</string>
+    <string name="title">Les informations de patient</string>
+    <string name="informations">Informations</string>
 </resources>

@@ -3,20 +3,19 @@ package com.example.accessbilityserviceflutter
 import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint
 import android.app.KeyguardManager
-import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.PixelFormat
 import android.os.Build
-import android.os.IBinder
 import android.view.*
 import android.view.accessibility.AccessibilityEvent
 import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
-import io.flutter.embedding.android.FlutterActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 
 class DoctaAccessibilityService : AccessibilityService() {
     var mLayout: FrameLayout? = null
@@ -43,20 +42,17 @@ class DoctaAccessibilityService : AccessibilityService() {
         println("add window")
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         mLayout = FrameLayout(this)
+        mLayout?.setBackgroundColor(0x00000000)
         lp = WindowManager.LayoutParams()
         lp.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
         lp.format = PixelFormat.TRANSLUCENT
         lp.flags = lp.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-        lp.width = 150 //WindowManager.LayoutParams.WRAP_CONTENT
-        lp.height = 150 //WindowManager.LayoutParams.WRAP_CONTENT
+        lp.width = WindowManager.LayoutParams.WRAP_CONTENT
+        lp.height = WindowManager.LayoutParams.WRAP_CONTENT
         lp.gravity = Gravity.CENTER
 
-
-        mLayout?.background = ContextCompat.getDrawable(this, R.drawable.notif)
-
-
-        //val inflater = LayoutInflater.from(this)
-        //inflater.inflate(R.layout.floating_layout, mLayout)
+        val inflater = LayoutInflater.from(this)
+        inflater.inflate(R.layout.floating_layout, mLayout)
 
         windowManager.addView(mLayout, lp)
 
@@ -93,14 +89,64 @@ class DoctaAccessibilityService : AccessibilityService() {
         })
 
 
-        mLayout?.setOnClickListener {
-            println("click icon btn")
-            val intent = Intent(this, ActivityInfo::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val closeBtn = mLayout?.findViewById(R.id.closeBtn) as ImageButton
+        val titleInfo = mLayout?.findViewById(R.id.titleInformation) as TextView
+        val fieldBtns = mLayout?.findViewById(R.id.fieldBtns) as ConstraintLayout
+        val fieldContent = mLayout?.findViewById(R.id.fieldContent) as ConstraintLayout
+        val iconApp = mLayout?.findViewById(R.id.iconApp) as ImageButton
 
-            removeWindow()
+        iconApp.setOnClickListener {
+            windowManager.removeView(mLayout)
+            lp.width = WindowManager.LayoutParams.MATCH_PARENT
+            lp.height = WindowManager.LayoutParams.MATCH_PARENT
+            windowManager.addView(mLayout,lp)
+            fieldContent.visibility = View.VISIBLE
+            fieldBtns.visibility = View.VISIBLE
+            titleInfo.visibility = View.VISIBLE
+            iconApp.visibility = View.INVISIBLE
+        }
+        iconApp.setOnTouchListener( object : View.OnTouchListener {
+            var x = 0.0
+            var y = 0.0
+            var px = 0.0
+            var py = 0.0
+            override fun onTouch(p0: View?, event: MotionEvent?): Boolean {
 
-            startActivity(intent)
+                when(event?.action){
+                    MotionEvent.ACTION_DOWN ->{
+                        x = lp.x.toDouble()
+                        y = lp.y.toDouble()
+
+                        px = event.rawX.toDouble()
+                        py = event.rawY.toDouble()
+                    }
+
+                    MotionEvent.ACTION_MOVE -> {
+                        lp.x = (x + event.rawX - px).toInt()
+                        lp.y = (y + event.rawY - py).toInt()
+
+                        windowManager.updateViewLayout(mLayout, lp)
+
+                    }
+
+                }
+                return false
+
+            }
+
+        })
+
+
+
+        closeBtn.setOnClickListener {
+            windowManager.removeView(mLayout)
+            lp.width = WindowManager.LayoutParams.WRAP_CONTENT
+            lp.height = WindowManager.LayoutParams.WRAP_CONTENT
+            windowManager.addView(mLayout,lp)
+            fieldContent.visibility = View.INVISIBLE
+            fieldBtns.visibility = View.INVISIBLE
+            titleInfo.visibility = View.INVISIBLE
+            iconApp.visibility = View.VISIBLE
         }
 
     }
@@ -132,18 +178,20 @@ class DoctaAccessibilityService : AccessibilityService() {
         createWindowOnLockScreen()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun createWindowOnLockScreen(){
         val keyguard = this.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 
         if (keyguard.isKeyguardLocked) {
             println("is locked")
+            //println("is enabled accessebility service : ${isAccessibilityEnabled()}")
             if(mLayout == null) {
                 println("Create cause mLayout is null")
                 createWindow()
             }
         } else {
             println("is not locked")
+            //println("is enabled accessebility service : ${isAccessibilityEnabled()}")
             removeWindow()
         }
     }
@@ -168,11 +216,13 @@ class DoctaAccessibilityService : AccessibilityService() {
                     removeWindow()
                 }else if (strAction == Intent.ACTION_USER_PRESENT || strAction == Intent.ACTION_SCREEN_ON) if (myKM.isDeviceLocked) {
                     println("Screen off " + "LOCKED")
+                    println("is enabled accessebility service : ${this@DoctaAccessibilityService.accessibilityButtonController.isAccessibilityButtonAvailable}")
                     if(mLayout == null) {
                         createWindow()
                     }
                 } else {
                     println("Screen off " + "UNLOCKED")
+                    println("is enabled accessebility service : ${this@DoctaAccessibilityService.accessibilityButtonController.isAccessibilityButtonAvailable}")
                     removeWindow()
                 }
             }
@@ -180,8 +230,27 @@ class DoctaAccessibilityService : AccessibilityService() {
         applicationContext.registerReceiver(screenOnOffReceiver, theFilter)
     }
 
-
-
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
     override fun onInterrupt() {}
 }
+/*
+  private fun isAccessibilityEnabled(): Boolean {
+        var accessibilityEnabled = 0
+        try {
+            accessibilityEnabled =
+                Settings.Secure.getInt(this.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
+            println("ACCESSIBILITY: $accessibilityEnabled")
+        } catch (e: Settings.SettingNotFoundException) {
+            println("Error finding setting, default accessibility to not found: " + e.message)
+        }
+
+        return if (accessibilityEnabled == 1) {
+            println("***ACCESSIBILIY IS ENABLED***: ")
+            true
+        } else {
+            println( "***ACCESSIBILIY IS DISABLED***")
+            false
+        }
+
+    }
+* */

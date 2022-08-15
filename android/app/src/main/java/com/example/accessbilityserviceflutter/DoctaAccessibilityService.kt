@@ -91,6 +91,7 @@ class DoctaAccessibilityService : AccessibilityService() {
 
         val closeBtn = mLayout?.findViewById(R.id.closeBtn) as ImageButton
         val titleInfo = mLayout?.findViewById(R.id.titleInformation) as TextView
+        val content = mLayout?.findViewById(R.id.textInfo) as TextView
         val fieldBtns = mLayout?.findViewById(R.id.fieldBtns) as ConstraintLayout
         val fieldContent = mLayout?.findViewById(R.id.fieldContent) as ConstraintLayout
         val iconApp = mLayout?.findViewById(R.id.iconApp) as ImageButton
@@ -101,6 +102,7 @@ class DoctaAccessibilityService : AccessibilityService() {
             lp.height = WindowManager.LayoutParams.MATCH_PARENT
             windowManager.addView(mLayout,lp)
             fieldContent.visibility = View.VISIBLE
+            content.text = Data.i.toString()
             fieldBtns.visibility = View.VISIBLE
             titleInfo.visibility = View.VISIBLE
             iconApp.visibility = View.INVISIBLE

@@ -223,7 +223,7 @@ class DoctaAccessibilityService : AccessibilityService() {
                 println("Action is : $strAction")
                 val myKM = context.getSystemService(KEYGUARD_SERVICE) as KeyguardManager
 
-                if(strAction == Intent.ACTION_SCREEN_OFF){
+                if(strAction == Intent.ACTION_SCREEN_OFF ){
                     removeWindow()
                 }else if (strAction == Intent.ACTION_USER_PRESENT || strAction == Intent.ACTION_SCREEN_ON) if (myKM.isDeviceLocked) {
                     println("Screen off " + "LOCKED")
